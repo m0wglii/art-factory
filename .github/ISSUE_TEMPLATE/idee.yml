@@ -1,0 +1,31 @@
+name: Bildidee
+description: Eine Idee für ein neues Bild einreichen
+title: "Idee: "
+labels: ["idee"]
+body:
+  - type: textarea
+    id: idee
+    attributes:
+      label: Idee in einem Satz
+      placeholder: Ein kleiner Roboter angelt an einem Bergsee.
+    validations:
+      required: true
+  - type: dropdown
+    id: muster
+    attributes:
+      label: Muster (optional)
+      options:
+        - automatisch
+        - 1 Bewohner
+        - 2 Ereignis
+        - 3 Umbesetzung
+        - 4 Riss
+  - type: dropdown
+    id: spur
+    attributes:
+      label: Spur (optional)
+      description: Bekannte Figuren werden immer als P geführt.
+      options:
+        - automatisch
+        - P privat
+        - V verkaufsfähig

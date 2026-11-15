@@ -1,0 +1,71 @@
+# Prompt-Gerüste. Platzhalter in [ECKIGEN KLAMMERN] füllt der Agent.
+# Prompts bleiben englisch, weil die Bildmodelle damit zuverlässiger arbeiten.
+
+basis: >-
+  Oil painting on canvas in the style of mass-produced 1970s decorative [GATTUNG] art:
+  [SZENE MIT 3-5 KONKRETEN BILDELEMENTEN], [HIMMEL UND LICHTSTIMMUNG], [FARBAKZENTE],
+  loose brushwork with palette-knife impasto in [BILDTEIL], visible canvas texture,
+  slightly kitschy. No people, no text, no frame, no signature. Aspect ratio [FORMAT].
+
+muster:
+  1:
+    name: Bewohner
+    zweistufig: true
+    edit: >-
+      Edit this painting: add a small [FIGUR] seen from behind, [TAETIGKEIT] [POSITION],
+      about [5-10]% of the image height. Paint it as part of the old oil painting: thick,
+      visible, uneven brushstrokes and soft edges like [NACHBARBEREICH], matte surface with
+      no glossy highlights, no more detail than [VERGLEICHSOBJEKT]. Light from [LICHTQUELLE],
+      a soft shadow on [UNTERGRUND], and its reflection in the water if it is near the shore.
+      Do not add any new objects. Keep everything else unchanged.
+  2:
+    name: Ereignis
+    zweistufig: true
+    edit: >-
+      Edit this painting: add [ELEMENT] [POSITION], about [10-15]% of the image width.
+      It is [EINGRIFF] the [EINDEUTIG BENANNTES OBJEKT DER SZENE], with [FOLGEEFFEKT 1] and
+      [FOLGEEFFEKT 2]. Paint everything with the same thick, loose brushstrokes, soft edges
+      and color palette as the rest. [LICHTWIRKUNG AUF DIE UMGEBUNG]. Do not add any new
+      [OBJEKTE]. Keep everything else unchanged.
+  3:
+    name: Umbesetzung
+    zweistufig: false
+    status: ungetestet
+    edit: >-
+      Oil painting on canvas reinterpreting the composition of [GEMEINFREIES WERK, KUENSTLER, JAHR]:
+      same pose, framing, background and painting technique, but the figures are replaced by
+      [FIGUREN]. Aged varnish, visible canvas texture. No text, no frame, no signature.
+  4:
+    name: Riss
+    zweistufig: true
+    status: ungetestet
+    edit: >-
+      Edit this painting: the [BILDTEIL] is torn open like ripped canvas, with curled, shaded
+      paper-like edges that cast a soft shadow. Behind the tear, [ZWEITE BILDWELT] is visible.
+      The tear covers about [20-30]% of the image. Keep everything else unchanged.
+
+regeln:
+  - Größe und Position immer als Bildanteil angeben, nie als Vergleich mit Bildobjekten.
+  - Duktus an einem benannten Nachbarbereich des Basisbilds festmachen.
+  - Figuren möglichst von hinten oder im Profil zeigen.
+  - Dünne Linien als "a single loose brushstroke" beschreiben.
+  - Objekte, die verändert werden sollen, eindeutig benennen.
+  - Im Basisbild eine ruhige Fläche für das Element einplanen und im Prompt erwähnen.
+  - Bekannte Figuren nur beim Namen nennen. Lehnt das Bildmodell ab, wird das als Ergebnis
+    protokolliert. Keine Umschreibung des Aussehens als Umweg.
+
+nachschaerfen:
+  - befund: Element wirkt aufgeklebt, zu glatt oder glänzend
+    zusatz: paint it as part of the old oil painting, thick uneven brushstrokes like [NACHBARBEREICH], matte surface with no glossy highlights
+  - befund: Element zu groß oder falsch platziert
+    zusatz: about X% of the image height, in the [BEREICH]
+  - befund: Element fällt zu schnell auf
+    zusatz: seen from behind, smaller, partly hidden behind [VORDERGRUNDOBJEKT]
+  - befund: Farbe des Elements fällt aus der Palette
+    zusatz: use a muted version of its color mixed with the dominant tones of the painting
+  - befund: Schatten oder Spiegelung fehlt
+    zusatz: a soft shadow on [UNTERGRUND], its reflection in the water
+  - befund: Bildmodell erfindet ein neues Objekt
+    zusatz: Zielobjekt eindeutig benennen und "do not add any new [OBJEKTE]" ergänzen
+  - befund: Basisbild wurde stark verändert
+    zusatz: Eingriff kleiner und lokaler beschreiben

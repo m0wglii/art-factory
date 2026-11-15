@@ -1,0 +1,23 @@
+# QS-Rubrik. Jedes Kriterium wird mit 1 (durchgefallen) bis 5 (sehr gut) bewertet.
+# Bestanden: jedes Kriterium >= mindestwert UND Durchschnitt >= durchschnitt.
+
+mindestwert: 3
+durchschnitt: 4.0
+
+kriterien:
+  erster_blick:
+    frage: Wirkt das Bild auf den ersten Blick wie ein gewöhnliches Deko-Gemälde?
+  zweiter_blick:
+    frage: Ist das Element klar erkennbar und erzählt es etwas, das zur Szene passt?
+  duktus:
+    frage: Ist das Element mit demselben Pinselduktus, derselben Detailtiefe und Oberfläche gemalt wie seine Umgebung?
+  licht:
+    frage: Stimmen Lichtrichtung, Schatten und gegebenenfalls Spiegelung des Elements?
+  palette:
+    frage: Fügt sich die Farbe des Elements in die Palette des Bildes ein?
+  basis_erhalten:
+    frage: Ist das Basisbild abseits des Elements im Wesentlichen unverändert?
+  technik:
+    frage: Ist das Bild frei von technischen Fehlern (Artefakte, Schrift, Rahmen, deformierte Formen)?
+
+# Geschmack bewertet die QS nicht. Ob das Bild witzig ist, entscheidet der Mensch.
