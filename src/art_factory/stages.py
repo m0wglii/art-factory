@@ -96,3 +96,17 @@ def refine(llm: LLM, rules: Rules, edit_prompt: str, qa: QAResult) -> str:
     user = f"Bisheriger Prompt:\n{edit_prompt}\n\nBefunde:\n" + "\n".join(qa.befunde)
     user += f"\n\nBewertung: {json.dumps(qa.scores)}"
     return llm.json(system, user)["edit"]
+
+
+def choose_base(llm: LLM, rules: Rules, concept: Concept, kandidaten: list[Path]) -> tuple[int, str]:
+    """Wählt aus mehreren Basisbildern das beste. Gibt (Index ab 0, Begründung) zurück."""
+    system = (
+        "STUFE:BASISWAHL\nDu wählst das Basisbild, das am besten zu diesen Stilregeln passt und "
+        "an der vorgesehenen Stelle eine ruhige Fläche für das Element bietet:\n\n"
+        f"{rules.stil}\n\n"
+        "Gib {\"wahl\": Bildnummer ab 1, \"grund\": kurzer Satz} zurück."
+    )
+    user = f"Konzept: {json.dumps(concept.to_dict(), ensure_ascii=False)}\nBilder in Reihenfolge 1 bis {len(kandidaten)}."
+    data = llm.json(system, user, images=kandidaten)
+    wahl = min(max(int(data.get("wahl", 1)), 1), len(kandidaten)) - 1
+    return wahl, str(data.get("grund", ""))

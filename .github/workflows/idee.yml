@@ -1,0 +1,83 @@
+name: Idee zu Bild
+
+# Ein Issue mit dem Label "idee" startet einen Lauf und öffnet einen Pull Request.
+# Zusammenführen des Pull Requests = Freigabe. Schließen ohne Zusammenführen = verworfen.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: idee-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  lauf:
+    # Nur das Label "idee" und nur Issues der Repo-Inhaberin oder des Repo-Inhabers,
+    # damit niemand sonst kostenpflichtige Läufe auslösen kann.
+    if: github.event.label.name == 'idee' && github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten installieren
+        run: pip install -e ".[api]"
+
+      - name: Pipeline ausführen
+        id: pipeline
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_IMAGE_MODEL: ${{ vars.GEMINI_IMAGE_MODEL }}
+          ART_FACTORY_LLM_MODEL: ${{ vars.ART_FACTORY_LLM_MODEL || 'claude-sonnet-5-5' }}
+          # Repo-Variable ART_FACTORY_DUMMY=1 schaltet auf Platzhalterbilder ohne API-Kosten.
+          ART_FACTORY_DUMMY: ${{ vars.ART_FACTORY_DUMMY }}
+        run: python -m art_factory.issue
+
+      - name: Pull Request öffnen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          RUN_DIR: ${{ steps.pipeline.outputs.run_dir }}
+        run: |
+          branch="lauf/issue-${ISSUE_NUMBER}-${GITHUB_RUN_ID}"
+          git config user.name "art-factory"
+          git config user.email "art-factory@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add "$RUN_DIR"
+          git commit -m "Lauf für Issue #${ISSUE_NUMBER}"
+          git push -u origin "$branch"
+
+          {
+            echo "Closes #${ISSUE_NUMBER}"
+            echo
+            echo "Bilder und Protokoll: [REVIEW.md](https://github.com/${GITHUB_REPOSITORY}/blob/${branch}/${RUN_DIR}/REVIEW.md)"
+            echo
+            echo "Zusammenführen = Freigabe. Schließen = verworfen."
+            echo
+            sed -E "s#\]\(([^)/]+\.png)\)#](https://github.com/${GITHUB_REPOSITORY}/blob/${branch}/${RUN_DIR}/\1?raw=true)#g" "$RUN_DIR/REVIEW.md"
+          } > /tmp/pr-body.md
+
+          gh pr create --base "${GITHUB_REF_NAME}" --head "$branch" \
+            --title "Bild: ${ISSUE_TITLE}" --body-file /tmp/pr-body.md
+
+      - name: Fehler im Issue melden
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --body "Der Lauf ist fehlgeschlagen: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

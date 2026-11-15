@@ -17,7 +17,8 @@ def test_dummy_lauf_schaerft_nach_und_besteht(tmp_path):
     assert manifest["ergebnis"] == "v2.png"
     assert len(manifest["versuche"]) == 2
     assert len(manifest["prompts"]["edit_versionen"]) == 2
-    for name in ("idee.md", "konzepte.json", "basis.png", "v1.png", "v2.png", "REVIEW.md"):
+    assert manifest["basis"]["gewaehlt"] == "basis-2.png"
+    for name in ("idee.md", "konzepte.json", "basis-1.png", "basis-2.png", "v1.png", "v2.png", "REVIEW.md"):
         assert (run_dir / name).exists()
 
 
