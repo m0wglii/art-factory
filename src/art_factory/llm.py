@@ -92,6 +92,8 @@ class DummyLLM:
                 },
                 "befunde": [] if wert == 5 else ["Element wirkt aufgeklebt, zu glatt oder glänzend"],
             }
+        if "STUFE:BASISWAHL" in system:
+            return {"wahl": 2, "grund": "ruhigere Fläche für das Element"}
         if "STUFE:NACHSCHAERFEN" in system:
             return {"edit": "Edit this painting (nachgeschärft): ... matte surface ..."}
         raise ValueError("Unbekannte Stufe im Dummy-LLM")

@@ -20,6 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--spur", choices=["P", "V"])
     p.add_argument("--konzepte", type=int, default=3)
     p.add_argument("--max-versuche", type=int, default=3)
+    p.add_argument("--basis-varianten", type=int, default=2)
     p.add_argument("--rules", type=Path, default=Path("rules"))
     p.add_argument("--runs", type=Path, default=Path("runs"))
     args = parser.parse_args(argv)
@@ -34,6 +35,7 @@ def main(argv: list[str] | None = None) -> int:
         runs_dir=args.runs,
         konzepte=args.konzepte,
         max_versuche=args.max_versuche,
+        basis_varianten=args.basis_varianten,
         muster=args.muster,
         spur=args.spur,
     )

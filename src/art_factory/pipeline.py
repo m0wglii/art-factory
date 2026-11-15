@@ -9,7 +9,7 @@ from pathlib import Path
 from .generators import Generator
 from .llm import LLM
 from .models import GenerationRefused
-from .stages import Rules, make_prompts, refine, review, unfold
+from .stages import Rules, choose_base, make_prompts, refine, review, unfold
 
 
 def _slug(text: str) -> str:
@@ -29,12 +29,13 @@ def run(
     runs_dir: Path,
     konzepte: int = 3,
     max_versuche: int = 3,
+    basis_varianten: int = 2,
     muster: int | None = None,
     spur: str | None = None,
 ) -> Path:
     """Führt einen Lauf für das erste Konzept aus und gibt den Lauf-Ordner zurück.
 
-    Kostenbremse: höchstens 1 Basisbild + `max_versuche` Bearbeitungen je Lauf.
+    Kostenbremse: höchstens `basis_varianten` Basisbilder + `max_versuche` Bearbeitungen je Lauf.
     """
     rules = Rules.load(rules_dir)
     run_dir = runs_dir / f"{datetime.now():%Y%m%d-%H%M%S}-{_slug(idee)}"
@@ -51,13 +52,22 @@ def run(
         "konzept": concept.to_dict(),
         "generator": gen.name,
         "prompts": {"basis": prompts.basis, "edit_versionen": []},
+        "basis": None,
         "versuche": [],
         "status": "offen",
         "ergebnis": None,
     }
 
     try:
-        basis = gen.generate(prompts.basis, run_dir / "basis.png") if prompts.basis else None
+        basis = None
+        if prompts.basis:
+            kandidaten = [
+                gen.generate(prompts.basis, run_dir / f"basis-{i}.png")
+                for i in range(1, max(1, basis_varianten) + 1)
+            ]
+            wahl, grund = (0, "einzige Variante") if len(kandidaten) == 1 else choose_base(llm, rules, concept, kandidaten)
+            basis = kandidaten[wahl]
+            manifest["basis"] = {"gewaehlt": basis.name, "grund": grund, "kandidaten": [k.name for k in kandidaten]}
         edit_prompt = prompts.edit
         for nr in range(1, max_versuche + 1):
             manifest["prompts"]["edit_versionen"].append(edit_prompt)
@@ -103,6 +113,9 @@ def _review_md(m: dict) -> str:
         lines += [f"> {m['hinweis']}", ""]
     if m["ergebnis"]:
         lines += [f"## Vorschlag: {m['ergebnis']}", "", f"![Ergebnis]({m['ergebnis']})", ""]
+    if m.get("basis"):
+        b = m["basis"]
+        lines += [f"## Basisbild: {b['gewaehlt']}", "", f"![Basis]({b['gewaehlt']})", "", f"Auswahl aus {len(b['kandidaten'])}: {b['grund']}", ""]
     if m["versuche"]:
         kriterien = list(m["versuche"][0]["qs"]["scores"])
         lines += ["## QS-Protokoll", "", "| Bild | " + " | ".join(kriterien) + " | Ø | bestanden |"]
